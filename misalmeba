@@ -1,1 +1,293 @@
 in c# for a banking system: create IClient interface with a possibility of adding user, editing user, deleting user, adding/deleting sponsor, getting user information(including sponsor) using ID. Next create a Person class with unique ID(GUID) field, string first_name(required, min.2 and max 50 symbols), string last_name(from 2 to 50 characters), sex(selection using ENUM: male and female), string personal_id which should be 11 digits long, age(18-60/65) 60 year old ladies are retired and 65 yearold men, country(selection using ENUM), city(selection using ENUM), tel.number(string 4-50 symbols), e-mail, sponsor(who are they: mom, dad...using enum selection), sponsor id. create Company class using fields: GUID, string title(required, 2-50 symbols), registration code(required, 9 symbols), registration date(date field, required), registration country(enum selection), registration city(enum selection), company representative tel. number(string 4-50 symbols). create classes: deposit(client, deposit opening date, amount of money, currency(using enum selection), interest rate. next class next, credit class with the fields of client, credit issue date, amount, currency(selection using enum), interest rate, amount left to pay, months left to payment. client in these classes might be 'Person' or 'Company' objects. one client(person or company) might be using more than one services. create a static Client class, where will be information about clients(Person and Company objects). for a client class use IClient and IComparable. for Credit and Deposit classes: IComparer. Sort deposit by amount of money(descending). Sort Credit by months left to payment(ascending).print sortings seperately: firstly, by deposit, after that print sorting by credit. print Top m, where m<n, where n is total amount of companies(meaning cpmanies with the highest debt. create a method which counts yearly report about credit total given to clients. if we pass 2019 year to the method, it should add up all the credits in 2019 and print it(seperately for companies and persons) 
+public enum Sex
+{
+    Male,
+    Female
+}
+
+public enum Country
+{
+    USA,
+    Canada,
+    UK,
+    Germany,
+    France,
+    // Add other countries as needed
+}
+
+public enum City
+{
+    NewYork,
+    Toronto,
+    London,
+    Berlin,
+    Paris,
+    // Add other cities as needed
+}
+
+public enum SponsorType
+{
+    Mom,
+    Dad,
+    // Add other sponsor types as needed
+}
+
+public enum Currency
+{
+    USD,
+    EUR,
+    GBP,
+    // Add other currencies as needed
+}
+
+public interface IClient
+{
+    void AddUser(Person person);
+    void EditUser(Guid id, Person updatedPerson);
+    void DeleteUser(Guid id);
+    void AddSponsor(Guid id, SponsorType sponsorType, Guid sponsorId);
+    void DeleteSponsor(Guid id);
+    Person GetUserById(Guid id);
+}
+
+
+public class Person
+{
+    public Guid Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public Sex Sex { get; set; }
+    public string PersonalId { get; set; }
+    public int Age { get; set; }
+    public Country Country { get; set; }
+    public City City { get; set; }
+    public string TelephoneNumber { get; set; }
+    public string Email { get; set; }
+    public SponsorType? Sponsor { get; set; }
+    public Guid? SponsorId { get; set; }
+
+    public Person(string firstName, string lastName, Sex sex, string personalId, int age, Country country, City city, string telephoneNumber, string email)
+    {
+        if (firstName.Length < 2 || firstName.Length > 50)
+            throw new ArgumentException("First name must be between 2 and 50 characters.");
+        if (lastName.Length < 2 || lastName.Length > 50)
+            throw new ArgumentException("Last name must be between 2 and 50 characters.");
+        if (personalId.Length != 11)
+            throw new ArgumentException("Personal ID must be 11 digits long.");
+        if (age < 18 || (sex == Sex.Female && age > 60) || (sex == Sex.Male && age > 65))
+            throw new ArgumentException("Age must be between 18 and 60 for females and 18 and 65 for males.");
+        if (telephoneNumber.Length < 4 || telephoneNumber.Length > 50)
+            throw new ArgumentException("Telephone number must be between 4 and 50 characters.");
+        
+        Id = Guid.NewGuid();
+        FirstName = firstName;
+        LastName = lastName;
+        Sex = sex;
+        PersonalId = personalId;
+        Age = age;
+        Country = country;
+        City = city;
+        TelephoneNumber = telephoneNumber;
+        Email = email;
+    }
+}
+
+
+public class Company
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; }
+    public string RegistrationCode { get; set; }
+    public DateTime RegistrationDate { get; set; }
+    public Country RegistrationCountry { get; set; }
+    public City RegistrationCity { get; set; }
+    public string RepresentativeTelephoneNumber { get; set; }
+
+    public Company(string title, string registrationCode, DateTime registrationDate, Country registrationCountry, City registrationCity, string representativeTelephoneNumber)
+    {
+        if (title.Length < 2 || title.Length > 50)
+            throw new ArgumentException("Title must be between 2 and 50 characters.");
+        if (registrationCode.Length != 9)
+            throw new ArgumentException("Registration code must be 9 symbols long.");
+        if (representativeTelephoneNumber.Length < 4 || representativeTelephoneNumber.Length > 50)
+            throw new ArgumentException("Representative telephone number must be between 4 and 50 characters.");
+
+        Id = Guid.NewGuid();
+        Title = title;
+        RegistrationCode = registrationCode;
+        RegistrationDate = registrationDate;
+        RegistrationCountry = registrationCountry;
+        RegistrationCity = registrationCity;
+        RepresentativeTelephoneNumber = representativeTelephoneNumber;
+    }
+}
+
+
+public class Deposit
+{
+    public IClient Client { get; set; }
+    public DateTime DepositOpeningDate { get; set; }
+    public decimal Amount { get; set; }
+    public Currency Currency { get; set; }
+    public double InterestRate { get; set; }
+
+    public Deposit(IClient client, DateTime depositOpeningDate, decimal amount, Currency currency, double interestRate)
+    {
+        Client = client;
+        DepositOpeningDate = depositOpeningDate;
+        Amount = amount;
+        Currency = currency;
+        InterestRate = interestRate;
+    }
+}
+
+
+public class Credit
+{
+    public IClient Client { get; set; }
+    public DateTime CreditIssueDate { get; set; }
+    public decimal Amount { get; set; }
+    public Currency Currency { get; set; }
+    public double InterestRate { get; set; }
+    public decimal AmountLeftToPay { get; set; }
+    public int MonthsLeftToPayment { get; set; }
+
+    public Credit(IClient client, DateTime creditIssueDate, decimal amount, Currency currency, double interestRate, decimal amountLeftToPay, int monthsLeftToPayment)
+    {
+        Client = client;
+        CreditIssueDate = creditIssueDate;
+        Amount = amount;
+        Currency = currency;
+        InterestRate = interestRate;
+        AmountLeftToPay = amountLeftToPay;
+        MonthsLeftToPayment = monthsLeftToPayment;
+    }
+}
+
+public static class Client : IClient, IComparable<Client>
+{
+    private static List<Person> persons = new List<Person>();
+    private static List<Company> companies = new List<Company>();
+
+    public void AddUser(Person person)
+    {
+        persons.Add(person);
+    }
+
+    public void EditUser(Guid id, Person updatedPerson)
+    {
+        var person = GetUserById(id);
+        if (person != null)
+        {
+            person.FirstName = updatedPerson.FirstName;
+            person.LastName = updatedPerson.LastName;
+            person.Sex = updatedPerson.Sex;
+            person.PersonalId = updatedPerson.PersonalId;
+            person.Age = updatedPerson.Age;
+            person.Country = updatedPerson.Country;
+            person.City = updatedPerson.City;
+            person.TelephoneNumber = updatedPerson.TelephoneNumber;
+            person.Email = updatedPerson.Email;
+        }
+    }
+
+    public void DeleteUser(Guid id)
+    {
+        persons.RemoveAll(p => p.Id == id);
+    }
+
+    public void AddSponsor(Guid id, SponsorType sponsorType, Guid sponsorId)
+    {
+        var person = GetUserById(id);
+        if (person != null)
+        {
+            person.Sponsor = sponsorType;
+            person.SponsorId = sponsorId;
+        }
+    }
+
+    public void DeleteSponsor(Guid id)
+    {
+        var person = GetUserById(id);
+        if (person != null)
+        {
+            person.Sponsor = null;
+            person.SponsorId = null;
+        }
+    }
+
+    public Person GetUserById(Guid id)
+    {
+        return persons.FirstOrDefault(p => p.Id == id);
+    }
+
+    public int CompareTo(Client other)
+    {
+        // Implement comparison logic if needed
+        return 0;
+    }
+}
+
+
+public class DepositComparer : IComparer<Deposit>
+{
+    public int Compare(Deposit x, Deposit y)
+    {
+        return y.Amount.CompareTo(x.Amount); // Descending order
+    }
+}
+
+public class CreditComparer : IComparer<Credit>
+{
+    public int Compare(Credit x, Credit y)
+    {
+        return x.MonthsLeftToPayment.CompareTo(y.MonthsLeftToPayment); // Ascending order
+    }
+}
+
+public static class ClientReports
+{
+    public static void PrintSortedDeposits(List<Deposit> deposits)
+    {
+        deposits.Sort(new DepositComparer());
+        foreach (var deposit in deposits)
+        {
+            Console.WriteLine($"{deposit.Client}: {deposit.Amount} {deposit.Currency}");
+        }
+    }
+
+    public static void PrintSortedCredits(List<Credit> credits)
+    {
+        credits.Sort(new CreditComparer());
+        foreach (var credit in credits)
+        {
+            Console.WriteLine($"{credit.Client}: {credit.AmountLeftToPay} {credit.Currency}, Months left: {credit.MonthsLeftToPayment}");
+        }
+    }
+
+    public static void PrintTopCompaniesWithHighestDebt(List<Credit> credits, int topM)
+    {
+        var companyCredits = credits
+            .Where(c => c.Client is Company)
+            .OrderByDescending(c => c.AmountLeftToPay)
+            .Take(topM);
+
+        foreach (var credit in companyCredits)
+        {
+            Console.WriteLine($"{credit.Client}: {credit.AmountLeftToPay} {credit.Currency}");
+        }
+    }
+
+    public static void PrintYearlyReport(List<Credit> credits, int year)
+    {
+        var yearlyCredits = credits.Where(c => c.CreditIssueDate.Year == year);
+
+        var personCredits = yearlyCredits.Where(c => c.Client is Person).Sum(c => c.Amount);
+        var companyCredits = yearlyCredits.Where(c => c.Client is Company).Sum(c => c.Amount);
+
+        Console.WriteLine($"Total credits given to persons in {year}: {personCredits}");
+        Console.WriteLine($"Total credits given to companies in {year}: {companyCredits}");
+    }
+}
+
+
